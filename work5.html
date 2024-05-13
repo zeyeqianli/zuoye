@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>jQuery Game</title>
+    <style>
+        #game-board {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            background-color: #000;
+            overflow: hidden;
+        }
+        #character {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-size: cover; /* 确保背景图像适应元素大小 */
+            transition: background-image 0.3s; /* 平滑背景图像切换 */
+        }
+        
+        .character-left {
+            background-image: url('img/player_left.gif');
+        }
+        
+        .character-right {
+            background-image: url('img/player_right.gif');
+        }
+        #treasure {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-image: url('img/01ff6a5e8bdb41a801216518a98c74.jpg');
+			background-size: cover; /* 确保图片覆盖整个元素区域，同时保持比例 */
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1.2em;
+        }
+        
+    </style>
+</head>
+<body>
+
+<div id="game-board">
+    <div id="score">当前分数：0</div>
+    <div id="character"></div>
+    <div id="treasure"></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        var score = 0;
+        var character = $('#character');
+        var treasure = $('#treasure');
+        var gameBoard = $('#game-board');
+		var characterCenter; // 用于存储角色中心点的变量
+        var checkInterval;
+
+        function randomizeTreasurePosition() {
+            var randomLeft = Math.floor(Math.random() * (gameBoard.width() - treasure.width()));
+            var randomTop = Math.floor(Math.random() * (gameBoard.height() - treasure.height()));
+            treasure.css({ left: randomLeft, top: randomTop });
+        }
+
+        function checkTreasureCollision() {
+            var characterLeft = parseInt(character.css('left'));
+            var characterTop = parseInt(character.css('top'));
+            var treasureLeft = parseInt(treasure.css('left'));
+            var treasureTop = parseInt(treasure.css('top'));
+
+            if (
+                characterLeft < treasureLeft + treasure.width() &&
+                characterLeft + character.width() > treasureLeft &&
+                characterTop < treasureTop + treasure.height() &&
+                characterTop + character.height() > treasureTop
+            ) {
+                alert('恭喜你找到了宝箱！当前分数：' + ++score);
+                randomizeTreasurePosition();
+            }
+        }
+
+        function startGame() {
+            randomizeTreasurePosition();
+            checkInterval = setInterval(checkTreasureCollision, 100); // 每秒检查10次
+        }
+
+        function stopGame() {
+            clearInterval(checkInterval);
+        }
+
+        startGame();
+		
+		function updateCharacterCenter() {
+		            var characterPosition = character.position();
+		            characterCenter = {
+		                left: characterPosition.left + character.width() / 2,
+		                top: characterPosition.top + character.height() / 2
+		            };
+		        }
+		
+		function moveCharacterToMouse(e) {
+		            updateCharacterCenter(); // 更新角色中心点位置
+		
+		            // 根据鼠标位置与角色中心点的位置关系来设置角色的图片
+		            if (e.pageX > characterCenter.left) {
+		                character.addClass('character-right').removeClass('character-left');
+		            } else {
+		                character.addClass('character-left').removeClass('character-right');
+		            }
+		
+		            // 防止移动到游戏区域外
+		            var maxX = gameBoard.width() - character.width();
+		            var maxY = gameBoard.height() - character.height();
+		            
+		            // 计算角色的新位置，同时限制其在游戏区域内
+		            var newLeft = Math.max(0, Math.min(maxX, e.pageX - character.width() / 2));
+		            var newTop = Math.max(0, Math.min(maxY, e.pageY - character.height() / 2));
+		
+		            // 更新角色的位置
+		            character.css({ top: newTop, left: newLeft });
+					}
+		
+		
+		        // 监听鼠标移动事件以移动角色
+		        $(document).on('mousemove', moveCharacterToMouse);	
+        // 双击变身效果
+        character.dblclick(function() {
+            // 这里可以加载新的GIF图像来实现变身效果
+            character.css('background-image', 'url("img/player2.gif")'); // 新GIF图的路径
+        });
+
+        // 监听窗口关闭事件，防止游戏在后台运行
+        window.addEventListener('beforeunload', stopGame);
+    });
+</script>
+
+</body>
+</html>
